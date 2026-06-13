@@ -8,6 +8,10 @@ The site is deployed automatically from `main` with GitHub Pages.
 
 ## Features
 
+- Explainable on-device risk scoring with evidence for every verdict
+- Twelve behavioral and domain-structure scam detection models
+- One-tap judge demo with bank impersonation, investment, and safe-link scenarios
+- Actionable safety guidance and private scan history
 - Security dashboard and live threat feed
 - Multi-format threat scanner with local risk heuristics
 - Broker and investment platform trust analysis
@@ -28,3 +32,7 @@ Create a production build with `npm run build`.
 ## Privacy
 
 SentinelAI does not upload scan content. Demo analysis happens in your browser and preferences are stored in `localStorage`. For production-grade reputation or breach data, connect a trusted provider through your own server-side API.
+
+## Validation
+
+Run `npm test` to verify the core scam, safe-link, and platform comparison scenarios.
