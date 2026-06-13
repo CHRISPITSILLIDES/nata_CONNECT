@@ -1,6 +1,6 @@
-# SentinelAI
+# nataCONNECT
 
-A standalone, mobile-first fraud defense dashboard rebuilt from a Base44 prototype. It runs entirely in the browser with no paid platform, account, API key, or backend required.
+A desktop-first security and finance dashboard that runs entirely in the browser with no paid platform, account, API key, or backend required.
 
 The current release combines SentinelAI security with a self-contained finance advisor adapted from the public [nataCONNECT](https://github.com/lordofpastitsio/nataCONNECT) concept. A compact product switch moves between both experiences.
 

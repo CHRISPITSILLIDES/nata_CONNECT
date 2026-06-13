@@ -28,7 +28,7 @@ function useStoredState(key, initial) {
 }
 
 function Brand() {
-  return <div className="brand"><span className="brand-mark"><Shield size={20} /></span><b>Sentinel<span>AI</span></b></div>;
+  return <div className="brand"><span className="brand-mark"><Sparkles size={20} /></span><b>nata<span>CONNECT</span></b></div>;
 }
 
 function PageTitle({ icon: Icon, title, subtitle, tone = 'blue' }) {
