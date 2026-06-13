@@ -2,6 +2,8 @@
 
 A standalone, mobile-first fraud defense dashboard rebuilt from a Base44 prototype. It runs entirely in the browser with no paid platform, account, API key, or backend required.
 
+**Live site:** https://chrispitsillides.github.io/Sentinel_AI/
+
 ## Features
 
 - Security dashboard and live threat feed
