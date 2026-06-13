@@ -2,6 +2,8 @@
 
 A standalone, mobile-first fraud defense dashboard rebuilt from a Base44 prototype. It runs entirely in the browser with no paid platform, account, API key, or backend required.
 
+The current release combines SentinelAI security with a self-contained finance advisor adapted from the public [nataCONNECT](https://github.com/lordofpastitsio/nataCONNECT) concept. A compact product switch moves between both experiences.
+
 **Live site:** https://chrispitsillides.github.io/Sentinel_AI/
 
 The site is deployed automatically from `main` with GitHub Pages.
@@ -12,6 +14,8 @@ The site is deployed automatically from `main` with GitHub Pages.
 - Twelve behavioral and domain-structure scam detection models
 - One-tap judge demo with bank impersonation, investment, and safe-link scenarios
 - Actionable safety guidance and private scan history
+- Combined security and finance workspaces under Sentinel Connect
+- Payment guardrails, finance guide, practice decisions, bounded-growth simulation, and savings goals
 - Security dashboard and live threat feed
 - Multi-format threat scanner with local risk heuristics
 - Broker and investment platform trust analysis
