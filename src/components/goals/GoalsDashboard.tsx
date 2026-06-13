@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Target, Home, Plane, ShieldCheck, Laptop, Plus, ShoppingCart, Utensils, Car, Heart, GraduationCap, Lock } from 'lucide-react';
 import { GlassCard } from '../ui/GlassCard';
 import { Button } from '../ui/Button';
@@ -7,6 +7,8 @@ import { Modal } from '../ui/Modal';
 import { ProgressRing } from '../ui/ProgressRing';
 import { mockGoals, mockCategoryLimits } from '../../stores/appStore';
 import type { Goal, CategoryLimit } from '../../stores/appStore';
+import { subscribeToAppActions } from '../../lib/actions';
+import { usePersistentState } from '../../lib/storage';
 
 const categoryIcons: Record<string, React.ReactNode> = {
   rent: <Home size={16} />,
@@ -159,8 +161,8 @@ function CategoryLimitCard({ limit }: { limit: CategoryLimit }) {
 }
 
 export function GoalsDashboard() {
-  const [goals, setGoals] = useState<Goal[]>(mockGoals);
-  const [categoryLimits] = useState<CategoryLimit[]>(mockCategoryLimits);
+  const [goals, setGoals] = usePersistentState<Goal[]>('goals', mockGoals);
+  const [categoryLimits, setCategoryLimits] = usePersistentState<CategoryLimit[]>('category-limits', mockCategoryLimits);
   const [showAddGoal, setShowAddGoal] = useState(false);
   const [showAddLimit, setShowAddLimit] = useState(false);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
@@ -171,11 +173,12 @@ export function GoalsDashboard() {
   const [newGoalProtected, setNewGoalProtected] = useState(false);
   const [newLimitCategory, setNewLimitCategory] = useState('entertainment');
   const [newLimitAmount, setNewLimitAmount] = useState('');
-  const [autoSaveEnabled, setAutoSaveEnabled] = useState(true);
-  const [investmentAllocation, setInvestmentAllocation] = useState(15);
-  const [emergencyAllocation, setEmergencyAllocation] = useState(5);
-  const [billsBuffer, setBillsBuffer] = useState(600);
-  const [extraMonthly, setExtraMonthly] = useState(50);
+  const [autoSaveEnabled, setAutoSaveEnabled] = usePersistentState('auto-save', true);
+  const [investmentAllocation, setInvestmentAllocation] = usePersistentState('investment-allocation', 15);
+  const [emergencyAllocation, setEmergencyAllocation] = usePersistentState('emergency-allocation', 5);
+  const [billsBuffer, setBillsBuffer] = usePersistentState('bills-buffer', 600);
+  const [extraMonthly, setExtraMonthly] = usePersistentState('extra-monthly', 50);
+  const [customContribution, setCustomContribution] = useState('');
 
   const totalRemaining = goals.reduce((sum, g) => sum + Math.max(0, g.targetAmount - g.currentAmount), 0);
 
@@ -202,11 +205,35 @@ export function GoalsDashboard() {
   };
 
   const contributeToGoal = (goalId: string, amount: number) => {
+    if (!Number.isFinite(amount) || amount <= 0) return;
     setGoals(prev => prev.map(g =>
       g.id === goalId ? { ...g, currentAmount: Math.min(g.targetAmount, g.currentAmount + amount) } : g
     ));
     setSelectedGoal(null);
+    setCustomContribution('');
   };
+
+  const saveLimit = () => {
+    const amount = Number(newLimitAmount);
+    if (!Number.isFinite(amount) || amount <= 0) return;
+    setCategoryLimits(previous => {
+      const existing = previous.find(limit => limit.category === newLimitCategory);
+      if (existing) return previous.map(limit => limit.id === existing.id ? { ...limit, monthlyLimit: amount, isActive: true } : limit);
+      return [...previous, { id: crypto.randomUUID(), category: newLimitCategory, monthlyLimit: amount, currentSpent: 0, isActive: true }];
+    });
+    setNewLimitAmount('');
+    setShowAddLimit(false);
+  };
+
+  useEffect(() => subscribeToAppActions(action => {
+    if (action === 'goals_new') setShowAddGoal(true);
+    if (action === 'goals_limit_entertainment') {
+      setNewLimitCategory('entertainment');
+      setShowAddLimit(true);
+    }
+    if (action === 'goals_rent') setSelectedGoal(goals.find(goal => goal.category === 'rent') || null);
+    if (action === 'goals_vacation') setSelectedGoal(goals.find(goal => goal.category === 'vacation') || null);
+  }), [goals]);
 
   const totalTargetAmount = goals.reduce((sum, g) => sum + g.targetAmount, 0);
   const totalSaved = goals.reduce((sum, g) => sum + g.currentAmount, 0);
@@ -481,7 +508,7 @@ export function GoalsDashboard() {
           </div>
           <div className="flex gap-3 justify-end">
             <Button variant="ghost" onClick={() => setShowAddLimit(false)}>Cancel</Button>
-            <Button variant="goals" onClick={() => setShowAddLimit(false)}>Set Limit</Button>
+            <Button variant="goals" onClick={saveLimit} disabled={!Number(newLimitAmount)}>Set Limit</Button>
           </div>
         </div>
       </Modal>
@@ -531,10 +558,12 @@ export function GoalsDashboard() {
               <div className="flex gap-2">
                 <input
                   type="number"
+                  value={customContribution}
+                  onChange={event => setCustomContribution(event.target.value)}
                   placeholder="Amount"
                   className="flex-1 glass-input rounded-xl px-4 py-2 text-sm text-white placeholder-slate-500 outline-none"
                 />
-                <Button variant="goals" size="sm">Add</Button>
+                <Button variant="goals" size="sm" onClick={() => contributeToGoal(selectedGoal.id, Number(customContribution))} disabled={!Number(customContribution)}>Add</Button>
               </div>
             </div>
 

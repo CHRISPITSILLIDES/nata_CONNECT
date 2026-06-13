@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Shield, AlertTriangle, CheckCircle, XCircle, Plus, ChevronRight, Flag, Eye, Clock, Ban, DollarSign } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { GlassCard } from '../ui/GlassCard';
 import { Modal } from '../ui/Modal';
 import { mockCards, mockShieldRules, mockTransactions, mockScamReports } from '../../stores/appStore';
-import type { Card, ShieldRule, Transaction } from '../../stores/appStore';
+import type { Card, ScamReport, ShieldRule, Transaction } from '../../stores/appStore';
+import { subscribeToAppActions } from '../../lib/actions';
+import { usePersistentState } from '../../lib/storage';
 
 function safeHostname(input?: string) {
   if (!input) return '';
@@ -153,11 +155,29 @@ function TransactionItem({ tx, onApprove }: { tx: Transaction; onApprove: (id: s
 
 export function ShieldDashboard() {
   const [selectedCard, setSelectedCard] = useState<string>('1');
-  const [rules, setRules] = useState(mockShieldRules);
-  const [transactions, setTransactions] = useState(mockTransactions);
+  const [rules, setRules] = usePersistentState('shield-rules', mockShieldRules);
+  const [transactions, setTransactions] = usePersistentState('shield-transactions', mockTransactions);
+  const [scamReports, setScamReports] = usePersistentState<ScamReport[]>('scam-reports', mockScamReports);
   const [showAddRule, setShowAddRule] = useState(false);
+  const [showReportScam, setShowReportScam] = useState(false);
   const [newRuleText, setNewRuleText] = useState('');
   const [newRuleType, setNewRuleType] = useState<ShieldRule['ruleType']>('custom');
+  const [reportSeller, setReportSeller] = useState('');
+  const [reportUrl, setReportUrl] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
+
+  useEffect(() => subscribeToAppActions(action => {
+    if (action === 'shield_add_rule' || action === 'shield_spending_limit') {
+      setNewRuleType(action === 'shield_spending_limit' ? 'spending_limit' : 'custom');
+      setShowAddRule(true);
+    }
+    if (action === 'shield_block_unverified') {
+      setNewRuleType('seller_verification');
+      setNewRuleText('Block unverified sellers');
+      setShowAddRule(true);
+    }
+    if (action === 'shield_report_scam') setShowReportScam(true);
+  }), []);
 
   const cardRules = rules.filter(r => r.cardId === selectedCard);
   const blockedCount = transactions.filter(t => t.status === 'blocked').length;
@@ -184,6 +204,24 @@ export function ShieldDashboard() {
     setRules(prev => [...prev, newRule]);
     setNewRuleText('');
     setShowAddRule(false);
+  };
+
+  const addScamReport = () => {
+    if (!reportSeller.trim() || !reportDescription.trim()) return;
+    setScamReports(previous => [{
+      id: crypto.randomUUID(),
+      sellerName: reportSeller.trim(),
+      sellerUrl: reportUrl.trim() || undefined,
+      description: reportDescription.trim(),
+      reportType: 'community_report',
+      verified: false,
+      reportCount: 1,
+      createdAt: new Date().toISOString(),
+    }, ...previous]);
+    setReportSeller('');
+    setReportUrl('');
+    setReportDescription('');
+    setShowReportScam(false);
   };
 
   return (
@@ -251,10 +289,13 @@ export function ShieldDashboard() {
       </div>
 
       {/* Scam Reports */}
-      <div>
-        <h2 className="text-sm font-medium text-slate-400 mb-3">Flagged Sellers</h2>
+      <div id="flagged-sellers">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-sm font-medium text-slate-400">Flagged Sellers</h2>
+          <Button variant="secondary" size="sm" onClick={() => setShowReportScam(true)}><Flag size={14} /> Report seller</Button>
+        </div>
         <div className="space-y-2">
-          {mockScamReports.map(report => (
+          {scamReports.map(report => (
             <div key={report.id} className="flex items-center gap-3 p-3 rounded-xl bg-slate-950/90 border border-slate-700">
               <Flag size={16} className="text-slate-300 shrink-0" />
               <div className="flex-1 min-w-0">
@@ -358,6 +399,16 @@ export function ShieldDashboard() {
             <Button variant="ghost" onClick={() => setShowAddRule(false)}>Cancel</Button>
             <Button variant="shield" onClick={addRule}>Add Rule</Button>
           </div>
+        </div>
+      </Modal>
+
+      <Modal isOpen={showReportScam} onClose={() => setShowReportScam(false)} title="Report a suspicious seller">
+        <div className="space-y-4">
+          <input value={reportSeller} onChange={event => setReportSeller(event.target.value)} placeholder="Seller or sender name" className="w-full glass-input rounded-xl px-4 py-3 text-sm" />
+          <input value={reportUrl} onChange={event => setReportUrl(event.target.value)} placeholder="Website URL (optional)" className="w-full glass-input rounded-xl px-4 py-3 text-sm" />
+          <textarea value={reportDescription} onChange={event => setReportDescription(event.target.value)} placeholder="What happened? Do not include payment or identity details." className="w-full h-28 glass-input rounded-xl px-4 py-3 text-sm resize-none" />
+          <p className="text-xs text-slate-500">Reports stay in this browser in the current prototype. They are not automatically submitted to an authority.</p>
+          <div className="flex justify-end gap-3"><Button variant="ghost" onClick={() => setShowReportScam(false)}>Cancel</Button><Button variant="shield" onClick={addScamReport} disabled={!reportSeller.trim() || !reportDescription.trim()}>Save report</Button></div>
         </div>
       </Modal>
     </div>

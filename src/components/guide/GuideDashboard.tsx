@@ -1,74 +1,140 @@
-import { useState } from 'react';
-import { GlassCard } from '../ui/GlassCard';
+import { FormEvent, useEffect, useRef, useState } from 'react';
+import { Loader2, RotateCcw, Send, Shield, Sparkles } from 'lucide-react';
+import { askAdvisor, AdvisorMessage } from '../../lib/advisor';
+import { usePersistentState } from '../../lib/storage';
 import { Button } from '../ui/Button';
-import { Shield, Send } from 'lucide-react';
+import { GlassCard } from '../ui/GlassCard';
 
-interface ChatMessage {
-  role: 'user' | 'guide';
-  content: string;
+interface ChatMessage extends AdvisorMessage {
+  id: string;
+  source?: 'Local open-source AI' | 'Instant offline guide';
 }
 
-export function GuideDashboard() {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [input, setInput] = useState('');
+const welcome: ChatMessage = {
+  id: 'welcome',
+  role: 'assistant',
+  content: 'Hi, I am NataGuide. I can help turn a money question into practical next steps. Try asking about a budget, savings goal, suspicious payment, debt plan, or investing basics.',
+  source: 'Instant offline guide',
+};
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    setMessages(prev => [...prev, { role: 'user', content: input }]);
+const prompts = [
+  'Help me build a monthly budget',
+  'How large should my emergency fund be?',
+  'Create a safe debt payoff plan',
+  'How can I check a suspicious payment?',
+];
+
+export function GuideDashboard() {
+  const [messages, setMessages] = usePersistentState<ChatMessage[]>('guide-messages', [welcome]);
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState('');
+  const endRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => endRef.current?.scrollIntoView({ behavior: 'smooth' }), [messages, isLoading]);
+
+  const sendMessage = async (content: string) => {
+    const question = content.trim();
+    if (!question || isLoading) return;
+
+    const userMessage: ChatMessage = { id: crypto.randomUUID(), role: 'user', content: question };
+    const conversation = [...messages.filter(message => message.id !== 'welcome'), userMessage];
+    setMessages(previous => [...previous, userMessage]);
     setInput('');
+    setIsLoading(true);
+    setLoadingProgress('Starting local advisor...');
+
+    try {
+      const answer = await askAdvisor(
+        conversation.slice(-10).map(({ role, content: messageContent }) => ({ role, content: messageContent })),
+        setLoadingProgress,
+      );
+      setMessages(previous => [...previous, {
+        id: crypto.randomUUID(),
+        role: 'assistant',
+        content: answer.content,
+        source: answer.source,
+      }]);
+    } finally {
+      setIsLoading(false);
+      setLoadingProgress('');
+    }
+  };
+
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
+    void sendMessage(input);
+  };
+
+  const resetChat = () => {
+    setMessages([welcome]);
+    setIsLoading(false);
   };
 
   return (
     <div className="space-y-4 animate-fade-in">
-      <div>
-        <h1 className="text-2xl font-bold text-white">NataGuide</h1>
-        <p className="text-sm text-slate-400 mt-0.5">Your financial buddy. Ask anything.</p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-white">NataGuide</h1>
+          <p className="text-sm text-slate-400 mt-0.5">Practical financial education with a private offline fallback.</p>
+        </div>
+        <Button variant="ghost" size="sm" onClick={resetChat} disabled={isLoading}>
+          <RotateCcw size={14} /> New chat
+        </Button>
       </div>
 
-      {/* Chat Area */}
-      <GlassCard className="p-4 space-y-4 max-h-96 overflow-y-auto" gradient>
-        {messages.map((msg, idx) => (
-          <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`flex gap-3 max-w-sm ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
-              {msg.role === 'guide' && (
+      <GlassCard className="p-4 space-y-4 h-[28rem] overflow-y-auto" gradient>
+        {messages.map(message => (
+          <div key={message.id} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+            <div className={`flex gap-3 max-w-2xl ${message.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
+              {message.role === 'assistant' && (
                 <div className="w-8 h-8 rounded-full bg-slate-800/90 border border-slate-700 flex items-center justify-center shrink-0 mt-1">
                   <Shield size={16} className="text-slate-300" />
                 </div>
               )}
-              <div
-                className={`rounded-2xl px-4 py-3 text-sm ${
-                  msg.role === 'user'
-                    ? 'bg-blue-600/80 text-white rounded-br-none'
-                    : 'bg-slate-900/80 border border-slate-700 text-slate-100 rounded-bl-none'
-                }`}
-              >
-                {msg.content}
+              <div className={`rounded-2xl px-4 py-3 text-sm whitespace-pre-wrap leading-relaxed ${message.role === 'user' ? 'bg-blue-600/80 text-white rounded-br-none' : 'bg-slate-900/80 border border-slate-700 text-slate-100 rounded-bl-none'}`}>
+                {message.content}
+                {message.source && (
+                  <div className="mt-2 text-[10px] uppercase tracking-wide text-slate-500 flex items-center gap-1">
+                    <Sparkles size={10} /> {message.source}
+                  </div>
+                )}
               </div>
             </div>
           </div>
         ))}
+        {isLoading && (
+          <div className="flex items-center gap-2 text-sm text-slate-400">
+            <Loader2 size={16} className="animate-spin" /> {loadingProgress || 'NataGuide is preparing a careful answer...'}
+          </div>
+        )}
+        <div ref={endRef} />
       </GlassCard>
 
-      {/* Input Area */}
-      <div className="flex gap-2">
+      {messages.length === 1 && (
+        <div className="flex flex-wrap gap-2">
+          {prompts.map(prompt => (
+            <button key={prompt} onClick={() => void sendMessage(prompt)} className="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-2 text-xs text-slate-300 hover:border-slate-500 hover:text-white">
+              {prompt}
+            </button>
+          ))}
+        </div>
+      )}
+
+      <form className="flex gap-2" onSubmit={handleSubmit}>
         <input
           type="text"
           value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyPress={e => e.key === 'Enter' && handleSend()}
-          placeholder="What's on your mind?"
-          className="flex-1 bg-slate-900/50 border border-slate-700 rounded-full px-4 py-3 text-sm text-white placeholder-slate-500 outline-none focus:border-slate-600 transition-colors"
+          onChange={event => setInput(event.target.value)}
+          placeholder="Ask a financial question without sharing sensitive data..."
+          maxLength={2000}
+          className="flex-1 bg-slate-900/50 border border-slate-700 rounded-full px-4 py-3 text-sm text-white placeholder-slate-500 outline-none focus:border-slate-500 transition-colors"
         />
-        <Button
-          variant="primary"
-          size="md"
-          onClick={handleSend}
-          disabled={!input.trim()}
-          className="rounded-full px-4"
-        >
-          <Send size={16} />
+        <Button variant="primary" size="md" disabled={!input.trim() || isLoading} className="rounded-full px-4">
+          {isLoading ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
         </Button>
-      </div>
+      </form>
+      <p className="text-xs text-slate-500">The optional AI runs on your device with WebGPU. Its model downloads once and is cached by the browser. The instant offline guide remains available on unsupported devices. Educational guidance only.</p>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, Shield, TrendingUp, Trophy, Target, ArrowRight, X } from 'lucide-react';
+import { Search, Shield, Trophy, Target, ArrowRight, X } from 'lucide-react';
+import { dispatchAppAction } from '../../lib/actions';
 
 interface CommandItem {
   id: string;
@@ -57,6 +58,7 @@ export function CommandBar({ isOpen, onClose, onNavigate }: CommandBarProps) {
 
   const executeCommand = (cmd: CommandItem) => {
     onNavigate(cmd.pillar);
+    window.setTimeout(() => dispatchAppAction(cmd.action), 0);
     onClose();
   };
 

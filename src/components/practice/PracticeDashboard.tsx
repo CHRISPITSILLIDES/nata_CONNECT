@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { TrendingUp, TrendingDown, Brain, Trophy, Target, Zap, Award, Star, BarChart3, RefreshCw, ArrowRight } from 'lucide-react';
 import { GlassCard } from '../ui/GlassCard';
 import { Button } from '../ui/Button';
@@ -7,6 +7,8 @@ import { Modal } from '../ui/Modal';
 import { ProgressRing } from '../ui/ProgressRing';
 import { mockPracticeSession, mockPracticeTrades, mockAchievements, mockMarketData, mockPracticeSessions } from '../../stores/appStore';
 import type { PracticeSession, PracticeTrade } from '../../stores/appStore';
+import { subscribeToAppActions } from '../../lib/actions';
+import { usePersistentState } from '../../lib/storage';
 
 function SkillScoreRing({ score }: { score: number }) {
   return (
@@ -79,13 +81,14 @@ function PracticeTradeItem({ trade }: { trade: PracticeTrade }) {
 }
 
 export function PracticeDashboard() {
-  const [sessions, setSessions] = useState<PracticeSession[]>(mockPracticeSessions);
-  const [currentSessionId, setCurrentSessionId] = useState<string>(mockPracticeSessions[0]?.id || String(Date.now()));
-  const [trades, setTrades] = useState<PracticeTrade[]>(mockPracticeTrades);
+  const [sessions, setSessions] = usePersistentState<PracticeSession[]>('practice-sessions', mockPracticeSessions);
+  const [currentSessionId, setCurrentSessionId] = usePersistentState<string>('practice-current-session', mockPracticeSessions[0]?.id || String(Date.now()));
+  const [trades, setTrades] = usePersistentState<PracticeTrade[]>('practice-trades', mockPracticeTrades);
   const [showTradeModal, setShowTradeModal] = useState(false);
   const [selectedSymbol, setSelectedSymbol] = useState('');
   const [tradeSide, setTradeSide] = useState<'buy' | 'sell'>('buy');
   const [tradeQuantity, setTradeQuantity] = useState('1');
+  const [tradeError, setTradeError] = useState('');
 
   const session = sessions.find(s => s.id === currentSessionId) || sessions[0] || mockPracticeSession;
   const totalPnl = session.balance - session.initialBalance;
@@ -93,13 +96,14 @@ export function PracticeDashboard() {
 
   const executeTrade = () => {
     const marketItem = mockMarketData.find(m => m.symbol === selectedSymbol);
-    if (!marketItem) return;
+    if (!marketItem) return setTradeError('Choose a market symbol.');
 
     const qty = parseFloat(tradeQuantity);
     const price = marketItem.price;
     const cost = qty * price;
 
-    if (tradeSide === 'buy' && cost > session.balance) return;
+    if (!Number.isFinite(qty) || qty <= 0) return setTradeError('Enter a valid quantity.');
+    if (tradeSide === 'buy' && cost > session.balance) return setTradeError('This virtual account does not have enough available cash.');
 
     const newTrade: PracticeTrade = {
       id: String(Date.now()),
@@ -119,6 +123,7 @@ export function PracticeDashboard() {
     }
 
     setShowTradeModal(false);
+    setTradeError('');
     setSelectedSymbol('');
     setTradeQuantity('1');
   };
@@ -180,6 +185,12 @@ export function PracticeDashboard() {
     setTrades(prev => prev.filter(t => t.sessionId !== newSession.id));
   };
 
+  useEffect(() => subscribeToAppActions(action => {
+    if (action === 'practice_start') resetSession();
+    if (action === 'practice_trade') setShowTradeModal(true);
+    if (action === 'practice_score') document.getElementById('practice-score')?.scrollIntoView({ behavior: 'smooth' });
+  }), []);
+
   const openTrades = trades.filter(t => t.status === 'open' && t.sessionId === session.id);
 
   return (
@@ -205,7 +216,7 @@ export function PracticeDashboard() {
       </div>
 
       {/* Stats Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+      <div id="practice-score" className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <GlassCard className="p-4 flex items-center gap-4" gradient>
           <SkillScoreRing score={session.skillScore} />
           <div>
@@ -375,7 +386,8 @@ export function PracticeDashboard() {
             </div>
           )}
           <div className="flex gap-3 justify-end">
-            <Button variant="ghost" onClick={() => setShowTradeModal(false)}>Cancel</Button>
+            {tradeError && <p className="w-full text-xs text-red-300">{tradeError}</p>}
+            <Button variant="ghost" onClick={() => { setShowTradeModal(false); setTradeError(''); }}>Cancel</Button>
             <Button variant="practice" onClick={executeTrade} disabled={!selectedSymbol || parseFloat(tradeQuantity) <= 0}>
               Place Trade
             </Button>
