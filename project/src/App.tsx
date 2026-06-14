@@ -161,7 +161,7 @@ function App() {
   const handleUnlockMember = async (memberId: string, pin: string) => {
     try {
       const result = await piAPI.verifyPin(memberId, pin);
-      const success = result?.success || result === true;
+      const success = result.success;
       if (success) {
         handleEnterMember(memberId);
         return true;
@@ -259,7 +259,7 @@ function App() {
   return (
     <div className="h-screen flex flex-col bg-nata-bg overflow-hidden bg-cover bg-center" style={{ backgroundImage: 'url(/bck.png)', backgroundAttachment: 'fixed' }}>
       {/* Background Overlay */}
-      <div className="absolute inset-0 bg-black/40 z-0" />
+      <div className="absolute inset-0 bg-slate-950/75 z-0" />
       {/* Top Bar */}
       <header className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-slate-700 bg-slate-950/50 backdrop-blur-md">
         <div className="flex items-center gap-3">

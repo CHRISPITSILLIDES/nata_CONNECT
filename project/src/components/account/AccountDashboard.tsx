@@ -8,7 +8,6 @@ import type { Card, FamilyMember } from '../../stores/appStore';
 import { piAPI } from '../../api/pi';
 import { askNataGuide, loadNataAIConfig } from '../../api/ai';
 import { marketAPI } from '../../api/market';
-import { bankAPI } from '../../api/bank';
 // Bank/Tink removed for now
 
 type AiProvider = 'anthropic' | 'openai' | 'ollama' | 'custom';
@@ -355,7 +354,7 @@ export function AccountDashboard({ currentMember, emergencyPasscode, onSetEmerge
               })}
               {cards.length === 0 && (
                 <div className="rounded-xl border border-slate-700 bg-slate-950/80 p-4 text-slate-400 text-sm">
-                  Keine Karten gefunden. Dieses Konto ruft jetzt Daten direkt vom Raspberry Pi ab.
+                  No cards found. This prototype is using local demo data.
                 </div>
               )}
             </div>
@@ -517,7 +516,7 @@ Endpoint: http://10.36.234.47:11434/api/chat`}
                 </div>
               )}
               <div className="text-xs text-slate-500">
-                Your API key stays on your device only. We never send it to the cloud.
+                Prototype warning: this key is stored in this browser and sent directly to the selected provider. Do not use a production or high-value key.
               </div>
             </div>
           </GlassCard>
@@ -600,7 +599,7 @@ Endpoint: http://10.36.234.47:11434/api/chat`}
                 </div>
               )}
               <div className="text-xs text-slate-500">
-                Your API key stays on your device only.
+                Prototype warning: this market key is stored in this browser. Use a restricted development key only.
               </div>
             </div>
           </GlassCard>

@@ -73,13 +73,13 @@ export function GuideDashboard({ currentMemberId, onNavigate }: GuideDashboardPr
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [hasKey, setHasKey] = useState(false);
+  const [hasKey, setHasKey] = useState(true);
   const [provider, setProvider] = useState<string>('anthropic');
 
   useEffect(() => {
     const config = loadNataAIConfig();
     setProvider(config.provider || 'anthropic');
-    setHasKey(Boolean(config.apiKey) || config.provider === 'ollama');
+    setHasKey(true);
   }, []);
 
   const handleSend = async () => {
@@ -147,7 +147,7 @@ export function GuideDashboard({ currentMemberId, onNavigate }: GuideDashboardPr
               <div className="text-sm text-slate-100 font-semibold">NataGuide needs an AI key to wake up.</div>
               <p className="mt-3 text-sm text-slate-400 leading-6">
                 Go to Settings → AI Configuration
-                <br />Your key stays on your device. We never see it.
+                <br />For this prototype, keys are stored in your browser. Use a restricted development key only.
               </p>
               <div className="mt-4">
                 <Button variant="secondary" size="md" onClick={() => onNavigate?.('account')}>
@@ -166,7 +166,7 @@ export function GuideDashboard({ currentMemberId, onNavigate }: GuideDashboardPr
       <div>
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-white">NataGuide</h1>
-          <span className="rounded-full bg-slate-900/80 px-3 py-1 text-xs text-slate-300">AI chat</span>
+          <span className="rounded-full bg-slate-900/80 px-3 py-1 text-xs text-slate-300">{provider && (hasKey || provider === 'ollama') ? 'AI + local fallback' : 'Local guide'}</span>
         </div>
         <p className="text-sm text-slate-400 mt-0.5">Your financial buddy. Ask anything.</p>
       </div>

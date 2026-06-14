@@ -28,7 +28,7 @@ export function GlassCard({
 
   return (
     <div
-      className={`${variantClass} p-5 ${hoverClass} ${className}`}
+      className={`${variantClass} rounded-2xl p-5 ${hoverClass} ${className}`}
       onClick={onClick}
       style={style}
     >

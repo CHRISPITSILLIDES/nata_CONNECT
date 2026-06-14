@@ -244,13 +244,13 @@ export function ShieldDashboard({ currentMember, familyShieldRules, emergencyLoc
         id: String(Date.now()),
         hostname,
         status: 'danger',
-        title: 'SCAM DETECTED',
+        title: 'HIGH-RISK DEMO MATCH',
         reportCount: 89,
         firstSeen: '4 days ago',
         category: 'Fake online store',
         domainAge: '6 days old',
         matchPercent: 94,
-        notes: ['DO NOT visit this link', 'DO NOT enter card details'],
+        notes: ['Keyword-based demo result only', 'Verify with independent reputation sources before acting'],
       };
     }
 
@@ -272,13 +272,13 @@ export function ShieldDashboard({ currentMember, familyShieldRules, emergencyLoc
       id: String(Date.now()),
       hostname,
       status: 'safe',
-      title: 'LOOKS SAFE',
+      title: 'NO DEMO WARNING FOUND',
       reportCount: 0,
       firstSeen: 'Verified domain',
       category: 'Trusted site',
       domainAge: '26 years old',
       trustedNodes: 1247,
-      notes: ['Always stay alert even on trusted sites'],
+      notes: ['This does not prove the site is safe', 'Check the domain and independent reviews before paying'],
     };
   };
 

@@ -169,15 +169,27 @@ export const mockFamilyMembers: FamilyMember[] = [
   { id: 'george', name: 'George', role: 'member', pin: '', lastLogin: '2026-06-14 10:00', phoneLocked: false, healthScore: 81, netWorth: 0, avatar: 'G', color: '#10b981', badge: 'Member' },
 ];
 
-export const mockFamilyGoals: FamilyGoal[] = [];
+export const mockFamilyGoals: FamilyGoal[] = [
+  { id: 'family-goal-1', name: 'Family emergency fund', targetAmount: 10000, currentAmount: 4200, managedBy: 'zack', contributions: [{ name: 'Zack', amount: 2200 }, { name: 'Sarah', amount: 2000 }], icon: 'shield', color: '#10b981' },
+];
 
-export const mockFamilyActivity: FamilyActivity[] = []; 
+export const mockFamilyActivity: FamilyActivity[] = [
+  { id: 'activity-1', text: 'Monthly savings review completed', timestamp: new Date().toISOString(), status: 'approved' },
+];
 
-export const mockShieldRules: ShieldRule[] = []; 
+export const mockShieldRules: ShieldRule[] = [
+  { id: 'rule-1', cardId: 'card-1', ruleText: 'Review online purchases above €250', ruleType: 'spending_limit', isActive: true, parameters: { amount: 250 }, scope: 'personal' },
+  { id: 'rule-2', cardId: 'card-1', ruleText: 'Block unverified gambling merchants', ruleType: 'category_block', isActive: true, parameters: { category: 'gambling' }, scope: 'personal' },
+];
 
-export const mockFamilyShieldRules: ShieldRule[] = []; 
+export const mockFamilyShieldRules: ShieldRule[] = [
+  { id: 'family-rule-1', cardId: 'all', ruleText: 'Ask for confirmation on unusual family payments', ruleType: 'seller_verification', isActive: true, parameters: {}, scope: 'family' },
+];
 
-export const mockTransactions: Transaction[] = [];
+export const mockTransactions: Transaction[] = [
+  { id: 'tx-1', cardId: 'card-1', sellerName: 'Local Market', amount: 64.3, currency: 'EUR', category: 'Food', status: 'approved', isScamReport: false, createdAt: new Date().toISOString() },
+  { id: 'tx-2', cardId: 'card-1', sellerName: 'Unknown Electronics', sellerUrl: 'unknown-electronics.example', amount: 499, currency: 'EUR', category: 'Shopping', status: 'flagged', blockReason: 'New merchant and unusually high amount', isScamReport: false, createdAt: new Date(Date.now() - 86400000).toISOString() },
+];
 
 export const mockScamReports: ScamReport[] = []; 
 
@@ -201,10 +213,19 @@ export const mockPracticeSessions: PracticeSession[] = [];
 
 export const mockAchievements: Achievement[] = []; 
 
-export const mockGoals: Goal[] = []; 
+export const mockGoals: Goal[] = [
+  { id: 'goal-1', name: 'Emergency buffer', targetAmount: 5000, currentAmount: 1850, category: 'emergency', deadline: '2026-12-31', isShieldProtected: true, icon: 'shield', color: '#10b981' },
+  { id: 'goal-2', name: 'Summer trip', targetAmount: 2400, currentAmount: 900, category: 'vacation', deadline: '2027-06-01', isShieldProtected: false, icon: 'plane', color: '#f59e0b' },
+];
 
-export const mockCategoryLimits: CategoryLimit[] = []; 
+export const mockCategoryLimits: CategoryLimit[] = [
+  { id: 'limit-1', category: 'entertainment', monthlyLimit: 250, currentSpent: 92, isActive: true },
+];
 
 export const mockPortfolioHistory: { time: string; value: number }[] = []; 
 
-export const mockMarketData: { symbol: string; name: string; price: number; change: number; changePercent: number }[] = []; 
+export const mockMarketData: { symbol: string; name: string; price: number; change: number; changePercent: number }[] = [
+  { symbol: 'AAPL', name: 'Apple', price: 198.4, change: 1.6, changePercent: 0.8 },
+  { symbol: 'MSFT', name: 'Microsoft', price: 449.2, change: 1.8, changePercent: 0.4 },
+  { symbol: 'BTC', name: 'Bitcoin', price: 67350, change: 1255, changePercent: 1.9 },
+];
