@@ -15,9 +15,10 @@ const cards: Card[] = [
   { id: 'card-2', name: 'Family savings', cardType: 'debit', lastFour: '7314', brand: 'Mastercard', balance: 6120, currency: 'EUR', color: '#10b981', isActive: true },
 ];
 
-export const PI_URL = import.meta.env.VITE_PI_URL || 'http://127.0.0.1:3001';
+export const PI_URL = import.meta.env.VITE_PI_URL || (import.meta.env.DEV ? 'http://127.0.0.1:3001' : '');
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  if (!PI_URL) throw new Error('Pi server is not configured for this deployment');
   const response = await fetch(`${PI_URL}${path}`, {
     ...options,
     headers: { 'content-type': 'application/json', ...options?.headers },

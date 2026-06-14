@@ -39,6 +39,7 @@ function App() {
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [showFamilyOverview, setShowFamilyOverview] = useState(false);
   const [piOnline, setPiOnline] = useState<boolean | null>(null);
+  const [demoMode, setDemoMode] = useState(false);
   const accountButtonRef = useRef<HTMLButtonElement | null>(null);
   const [accountMenuRect, setAccountMenuRect] = useState<{ top: number; right: number } | null>(null);
 
@@ -136,8 +137,8 @@ function App() {
     let mounted = true;
     const check = () => {
       piAPI.getStatus()
-        .then(() => { if (mounted) setPiOnline(true); })
-        .catch(() => { if (mounted) setPiOnline(false); });
+        .then(() => { if (mounted) { setPiOnline(true); setDemoMode(false); } })
+        .catch(() => { if (mounted) { setPiOnline(false); setDemoMode(true); } });
     };
     check();
     const id = setInterval(check, 30000);
@@ -257,20 +258,20 @@ function App() {
   const activePillarConfig = pillars.find(p => p.key === activePillar);
 
   return (
-    <div className="h-screen flex flex-col bg-nata-bg overflow-hidden bg-cover bg-center" style={{ backgroundImage: 'url(/bck.png)', backgroundAttachment: 'fixed' }}>
+    <div className="h-screen flex flex-col bg-nata-bg overflow-hidden bg-cover bg-center" style={{ backgroundImage: `url(${import.meta.env.BASE_URL}bck.png)`, backgroundAttachment: 'fixed' }}>
       {/* Background Overlay */}
       <div className="absolute inset-0 bg-slate-950/75 z-0" />
       {/* Top Bar */}
       <header className="relative z-10 flex items-center justify-between px-6 py-4 border-b border-slate-700 bg-slate-950/50 backdrop-blur-md">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-lg" />
+          <img src={`${import.meta.env.BASE_URL}logo.png`} alt="Logo" className="w-10 h-10 rounded-lg" />
         </div>
 
         {/* Command trigger removed */}
 
         <div className="hidden sm:flex items-center gap-2 ml-4 text-sm">
-          <div className={`px-2 py-1 rounded-md border ${piOnline === true ? 'border-emerald-600 text-emerald-300 bg-emerald-900/10' : piOnline === false ? 'border-rose-600 text-rose-300 bg-rose-900/10' : 'border-slate-700 text-slate-400'}`}>
-            {piOnline === true ? 'Pi Online' : piOnline === false ? 'Pi Offline' : 'Checking Pi...'}
+          <div className={`px-2 py-1 rounded-md border ${piOnline === true ? 'border-emerald-600 text-emerald-300 bg-emerald-900/10' : demoMode ? 'border-blue-600 text-blue-300 bg-blue-900/10' : piOnline === false ? 'border-rose-600 text-rose-300 bg-rose-900/10' : 'border-slate-700 text-slate-400'}`}>
+            {piOnline === true ? 'Pi Online' : demoMode ? 'Demo Mode' : piOnline === false ? 'Pi Offline' : 'Checking Pi...'}
           </div>
         </div>
 

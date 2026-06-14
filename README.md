@@ -2,6 +2,14 @@
 
 nataCONNECT is a local-first family financial app and toolkit for secure shared accounts and device-proximal services.
 
+## Open The Website
+
+The public demo is deployed automatically to:
+
+https://chrispitsillides.github.io/nata_CONNECT/
+
+The hosted website runs in self-contained demo mode. No installation, local server, Raspberry Pi, or API key is required.
+
 ## Run the Complete App
 
 The complete development setup runs two local services:
